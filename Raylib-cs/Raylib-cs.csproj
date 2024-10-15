@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <EnableDefaultItems>false</EnableDefaultItems>
     <AssemblyName>Raylib-cs</AssemblyName>
     <RootNamespace>Raylib_cs</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <LangVersion>12</LangVersion>
+    <LangVersion>13</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -34,7 +34,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <Import Project="./Build.props" />
@@ -50,9 +50,7 @@
   <ItemGroup>
     <Compile Include="interop\*.cs" />
     <Compile Include="types\*.cs" />
-    <Compile Include="types\native\CBool.cs" />
-    <Compile Include="types\native\AnsiBuffer.cs" />
-    <Compile Include="types\native\Utf8Buffer.cs" />
+    <Compile Include="AssemblyInfo.cs" />
     <Compile Include="types\native\FilePathList.cs" />
   </ItemGroup>
 </Project>

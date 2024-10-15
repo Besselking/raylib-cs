@@ -22,7 +22,7 @@ public unsafe partial struct Music
     /// <summary>
     /// Music looping enable
     /// </summary>
-    public CBool Looping;
+    public bool Looping;
 
     /// <summary>
     /// Type of music context (audio filetype)

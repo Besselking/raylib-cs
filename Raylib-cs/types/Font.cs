@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace Raylib_cs;
 
@@ -58,18 +59,14 @@ public partial struct GlyphInfo
 /// <summary>
 /// Font, font texture and GlyphInfo array data
 /// </summary>
+[NativeMarshalling(typeof(FontMarshaller))]
 [StructLayout(LayoutKind.Sequential)]
-public unsafe partial struct Font
+public struct Font
 {
     /// <summary>
     /// Base size (default chars height)
     /// </summary>
     public int BaseSize;
-
-    /// <summary>
-    /// Number of characters
-    /// </summary>
-    public int GlyphCount;
 
     /// <summary>
     /// Padding around the glyph characters
@@ -84,10 +81,84 @@ public unsafe partial struct Font
     /// <summary>
     /// Rectangles in texture for the glyphs
     /// </summary>
-    public Rectangle* Recs;
+    public Rectangle[] Recs;
 
     /// <summary>
     /// Glyphs info data
     /// </summary>
-    public GlyphInfo* Glyphs;
+    public GlyphInfo[] Glyphs;
+}
+
+[CustomMarshaller(typeof(Font), MarshalMode.Default, typeof(FontMarshaller))]
+internal static unsafe class FontMarshaller
+{
+    // Unmanaged representation of Font.
+    // Should mimic the unmanaged error_data type at a binary level.
+    internal struct FontUnmanaged
+    {
+        public int BaseSize;
+        public int GlyphCount;
+        public int GlyphPadding;
+
+        public Texture2D Texture;
+
+        public Rectangle* Recs;
+
+        public GlyphInfo* Glyphs;
+    }
+
+    public static FontUnmanaged ConvertToUnmanaged(Font managed)
+    {
+        GlyphInfo* glyphsP = CopyManagedToAllocatedUnmanagedArray(managed.Glyphs);
+        Rectangle* recsP = CopyManagedToAllocatedUnmanagedArray(managed.Recs);
+
+        return new FontUnmanaged
+        {
+            BaseSize = managed.BaseSize,
+            GlyphCount = managed.Glyphs.Length,
+            GlyphPadding = managed.GlyphPadding,
+            Texture = managed.Texture,
+            Recs = recsP,
+            Glyphs = glyphsP,
+        };
+    }
+
+    public static Font ConvertToManaged(FontUnmanaged unmanaged)
+    {
+        GlyphInfo[] glyphsArr = CopyUnmanagedToManagedArray(unmanaged.Glyphs, unmanaged.GlyphCount);
+        Rectangle[] recsArr = CopyUnmanagedToManagedArray(unmanaged.Recs, unmanaged.GlyphCount);
+
+        return new Font
+        {
+            BaseSize = unmanaged.BaseSize,
+            GlyphPadding = unmanaged.GlyphPadding,
+            Texture = unmanaged.Texture,
+            Recs = recsArr,
+            Glyphs = glyphsArr,
+        };
+    }
+
+    private static T* CopyManagedToAllocatedUnmanagedArray<T>(T[] managed) where T : unmanaged
+    {
+        var unmanagedP = ArrayMarshaller<T, T>.AllocateContainerForUnmanagedElements(managed, out int count);
+        var managedSource = ArrayMarshaller<T, T>.GetManagedValuesSource(managed);
+        var unmanagedDest = ArrayMarshaller<T, T>.GetUnmanagedValuesDestination(unmanagedP, count);
+        managedSource.CopyTo(unmanagedDest);
+        return unmanagedP;
+    }
+
+    private static T[] CopyUnmanagedToManagedArray<T>(T* unmanaged, int count) where T : unmanaged
+    {
+        var managedArray = ArrayMarshaller<T, T>.AllocateContainerForManagedElements(unmanaged, count);
+        var unmanagedSrc = ArrayMarshaller<T, T>.GetUnmanagedValuesDestination(unmanaged, count);
+        var managedDest = ArrayMarshaller<T, T>.GetManagedValuesDestination(managedArray);
+        unmanagedSrc.CopyTo(managedDest);
+        return managedArray;
+    }
+
+    public static void Free(FontUnmanaged unmanaged)
+    {
+        ArrayMarshaller<GlyphInfo, GlyphInfo>.Free(unmanaged.Glyphs);
+        ArrayMarshaller<Rectangle, Rectangle>.Free(unmanaged.Recs);
+    }
 }

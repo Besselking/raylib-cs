@@ -35,7 +35,7 @@ public partial struct RayCollision
     /// <summary>
     /// Did the ray hit something?
     /// </summary>
-    public CBool Hit;
+    public bool Hit;
 
     /// <summary>
     /// Distance to the nearest hit
